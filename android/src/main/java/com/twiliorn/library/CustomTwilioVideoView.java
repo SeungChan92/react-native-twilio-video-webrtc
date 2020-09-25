@@ -98,6 +98,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     private static final String TAG = "CustomTwilioVideoView";
     private static final String DATA_TRACK_MESSAGE_THREAD_NAME = "DataTrackMessages";
     private boolean enableRemoteAudio = false;
+    private boolean isVideo = true;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({Events.ON_CAMERA_SWITCHED,
@@ -255,6 +256,10 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     private boolean createLocalVideo(boolean enableVideo) {
+        if (!this.isVideo) {
+            return true;
+        }
+
         // Share your camera
         cameraCapturer = this.createCameraCaputer(getContext(), CameraCapturer.CameraSource.FRONT_CAMERA);
         if (cameraCapturer == null){
@@ -373,21 +378,25 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     // ====== CONNECTING ===========================================================================
 
     public void connectToRoomWrapper(
-            String roomName, String accessToken, boolean enableAudio, boolean enableVideo, boolean enableRemoteAudio) {
+            String roomName, String accessToken, boolean enableAudio, boolean enableVideo, boolean enableRemoteAudio, boolean isVideo) {
         this.roomName = roomName;
         this.accessToken = accessToken;
         this.enableRemoteAudio = enableAudio;
+        this.isVideo = isVideo;
 
         // Share your microphone
         localAudioTrack = LocalAudioTrack.create(getContext(), enableAudio);
 
-        if (cameraCapturer == null) {
-            boolean createVideoStatus = createLocalVideo(enableVideo);
-            if (!createVideoStatus) {
-                // No need to connect to room if video creation failed
-                return;
+        if (this.isVideo) {
+            if (cameraCapturer == null) {
+                boolean createVideoStatus = createLocalVideo(enableVideo);
+                if (!createVideoStatus) {
+                    // No need to connect to room if video creation failed
+                    return;
+                }
+            }
         }
-    }
+
         connectToRoom(enableAudio);
     }
 
